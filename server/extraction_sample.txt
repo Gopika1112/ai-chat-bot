@@ -1,0 +1,22 @@
+STATISTICS
+WITH R
+PROGRAMMING
+
+-- 1 of 53 --
+
+Unit 1 : Beginning with R
+Introduction, How To Run R, R Sessions
+And Functions, Basic Math, Variables,
+Data Types, Vectors,
+Advanced Data Structures, Data Frames,
+Lists, Matrices, Arrays, Classes.
+
+-- 2 of 53 --
+
+Introduction:
+R is a computer language used for data analysis and
+statistics.
+It 	was 	inspired 	by 	the 	S 	language, 	which 	was
+developed at AT&T.
+R was created by Ross Ihaka and Robert Gentleman.
+R is now maintained by the R Core Team, a

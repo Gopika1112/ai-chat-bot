@@ -1,0 +1,137 @@
+.sidebar {
+  width: 280px; /* Slightly wider */
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 40px 24px; /* Generous padding */
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(46, 31, 15, 0.02);
+}
+
+.sidebar-header {
+  margin-bottom: 48px;
+  padding: 0 12px;
+}
+
+.sidebar-header .logo {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  color: var(--text);
+  opacity: 0.7;
+  text-decoration: none;
+  border-radius: 0 12px 12px 0;
+  font-size: 15px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  border: none;
+  margin: 0 -24px; /* Extend border to edge */
+  padding-left: 21px; /* Align content after extending */
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background-color: rgba(124, 74, 45, 0.05);
+  opacity: 1;
+}
+
+.nav-item.active {
+  background-color: #EDE3D8;
+  color: var(--text);
+  border-left: 3px solid var(--accent);
+  opacity: 1;
+  font-weight: 700;
+}
+
+.nav-item svg {
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover svg {
+  transform: translateX(2px);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-color);
+  object-fit: cover;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  width: 100%;
+  background: transparent;
+  color: #A52A2A;
+  border: 1px solid rgba(165, 42, 42, 0.1);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: rgba(165, 42, 42, 0.05);
+  transform: translateY(-1px);
+}

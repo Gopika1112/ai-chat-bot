@@ -1,0 +1,13 @@
+{
+  "name": "pdf-summarizer-root",
+  "version": "1.0.0",
+  "scripts": {
+    "client": "npm run dev --prefix client",
+    "server": "node server/index.js",
+    "dev": "concurrently \"npm run client\" \"npm run server\"",
+    "install-all": "npm install && npm install --prefix client && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

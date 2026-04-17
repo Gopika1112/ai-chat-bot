@@ -1,0 +1,232 @@
+.upload-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.page-header {
+  text-align: center;
+}
+
+.page-header h1 {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.dropzone {
+  background: var(--sidebar-bg);
+  border: 2px dashed var(--border-color);
+  border-radius: 24px;
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  box-shadow: var(--shadow-soft);
+}
+
+.dropzone:hover {
+  border-color: var(--accent-color);
+  background: #FFFFFF;
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+.dropzone.has-file {
+  border-style: solid;
+  border-color: var(--accent-color);
+  background: #FFFFFF;
+}
+
+.upload-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 0.5rem;
+}
+
+.dropzone h3 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.dropzone p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.dropzone input[type="file"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.browse-btn {
+  background: #FFFFFF;
+  color: var(--accent-color);
+  border: 1.5px solid var(--border-color);
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.dropzone:hover .browse-btn {
+  border-color: var(--accent-color);
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-soft);
+}
+
+.file-info {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.remove-file {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(165, 42, 42, 0.05);
+  color: #A52A2A;
+  border-radius: 10px;
+  padding: 0;
+}
+
+.remove-file:hover {
+  background: rgba(165, 42, 42, 0.1);
+}
+
+.upload-submit-btn {
+  background: var(--accent-color);
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 1.25rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  box-shadow: 0 8px 24px rgba(139, 94, 60, 0.2);
+}
+
+.upload-submit-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(139, 94, 60, 0.25);
+}
+
+.upload-submit-btn:disabled {
+  opacity: 0.6;
+  background: var(--text-secondary);
+  cursor: wait;
+}
+
+.upload-result-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.status-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2rem;
+  border-radius: 16px;
+  font-weight: 500;
+  width: 100%;
+  max-width: 600px;
+  justify-content: center;
+}
+
+.status-message.success {
+  background: #F4F9F1;
+  color: var(--success-color);
+  border: 1px solid rgba(74, 103, 65, 0.1);
+}
+
+.status-message.error {
+  background: #FFF5F5;
+  color: var(--error-color);
+  border: 1px solid rgba(165, 42, 42, 0.1);
+}
+
+.status-message.warning {
+  background: #FFF9F2;
+  color: #B45309;
+  border: 1px solid rgba(180, 83, 9, 0.1);
+}
+
+.go-to-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2.5rem;
+  background: #FFFFFF;
+  color: var(--accent-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.25s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.go-to-chat-btn:hover {
+  background: var(--accent-color);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}

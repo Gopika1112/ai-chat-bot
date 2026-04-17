@@ -1,0 +1,5 @@
+[dotenv@17.3.1] injecting env (10) from server\.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+Testing OpenRouter...
+API Key present: true
+Status: 402
+Result: {"error":{"message":"Insufficient credits. This account never purchased credits. Make sure your key 

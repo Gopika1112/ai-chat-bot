@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Uploads and temporary files
+uploads/
+**/uploads/
+temp/
+**/temp/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+**/ .env
+
+# Production Builds
+dist/
+client/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.sln
+*.swp

@@ -1,0 +1,21 @@
+[dotenv@17.3.1] injecting env (10) from server\.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Listing models...
+Available models:
+- models/gemini-2.5-flash [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.0-flash [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.0-flash-001 [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.0-flash-lite-001 [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.0-flash-lite [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.5-flash-preview-tts [countTokens, generateContent]
+- models/gemini-flash-latest [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-flash-lite-latest [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.5-flash-lite [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-2.5-flash-image [generateContent, countTokens, batchGenerateContent]
+- models/gemini-2.5-flash-lite-preview-09-2025 [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-3-flash-preview [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-3.1-flash-lite-preview [generateContent, countTokens, createCachedContent, batchGenerateContent]
+- models/gemini-3.1-flash-image-preview [generateContent, countTokens, batchGenerateContent]
+- models/gemini-2.5-flash-native-audio-latest [countTokens, bidiGenerateContent]
+- models/gemini-2.5-flash-native-audio-preview-09-2025 [countTokens, bidiGenerateContent]
+- models/gemini-2.5-flash-native-audio-preview-12-2025 [countTokens, bidiGenerateContent]
+- models/gemini-3.1-flash-live-preview [bidiGenerateContent]
