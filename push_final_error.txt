@@ -1,0 +1,148 @@
+﻿git : remote: error: 
+GH013: Repository rule 
+violations found for 
+refs/heads/main.        
+At line:1 char:1
++ git push -u origin main 
+--force 2>&1 | Out-File 
+push_final_error.txt  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (r  
+  emote: error: ...s/ma   
+ in.        :String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+remote: 
+remote: - GITHUB PUSH 
+PROTECTION        
+remote:   ΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇö        
+remote:     Resolve the 
+following violations 
+before pushing again      
+  
+remote: 
+remote:     - Push cannot 
+contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn 
+how to resolve a blocked 
+push        
+remote:      https://docs.
+github.com/code-security/s
+ecret-scanning/working-wit
+h-secret-scanning-and-push
+-protection/working-with-p
+ush-protection-from-the-co
+mmand-line#resolving-a-blo
+cked-push        
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Google OAuth Client ID ΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇö        
+remote:        locations: 
+       
+remote:          - 
+commit: 672bae058d3c0676d2
+f5660e2fa1c2ab8a3306da    
+    
+remote:            path: 
+server/.env.example:3     
+   
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.  
+      
+remote:        https://git
+hub.com/Gopika1112/ai-chat
+-bot/security/secret-scann
+ing/unblock-secret/3CUuEEn
+paCJ0e6LA0JlwKG0FdEQ      
+  
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Google OAuth Client 
+Secret ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+ö        
+remote:        locations: 
+       
+remote:          - 
+commit: 672bae058d3c0676d2
+f5660e2fa1c2ab8a3306da    
+    
+remote:            path: 
+server/.env.example:4     
+   
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.  
+      
+remote:        https://git
+hub.com/Gopika1112/ai-chat
+-bot/security/secret-scann
+ing/unblock-secret/3CUuEDO
+OfacL6HaYJPuVczCbvp8      
+  
+remote:             
+remote:             
+remote:       ΓÇöΓÇö Groq 
+API Key ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö        
+remote:        locations: 
+       
+remote:          - 
+commit: 672bae058d3c0676d2
+f5660e2fa1c2ab8a3306da    
+    
+remote:            path: 
+server/.env.example:8     
+   
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.  
+      
+remote:        https://git
+hub.com/Gopika1112/ai-chat
+-bot/security/secret-scann
+ing/unblock-secret/3CUuEFR
+NEv0PLNbW1tyv1wWLfL7      
+  
+remote:             
+remote: 
+remote: 
+To https://github.com/Gopi
+ka1112/ai-chat-bot.git
+ ! [remote rejected] main 
+-> main (push declined 
+due to repository rule 
+violations)
+error: failed to push 
+some refs to 'https://gith
+ub.com/Gopika1112/ai-chat-
+bot.git'

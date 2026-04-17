@@ -34,11 +34,13 @@ console.log('📜 Testing DB connection...');
 db.query('SELECT NOW()')
   .then(() => {
     console.log('✅ Database connected successfully');
-    console.log('🚀 Attempting to listen on port', PORT);
-    app.listen(PORT, () => {
-      console.log(`🚀 Server (STABLE 5001) running on port ${PORT}`);
-      console.log('🗝️ OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
-    });
+    if (require.main === module) {
+      console.log('🚀 Attempting to listen on port', PORT);
+      app.listen(PORT, () => {
+        console.log(`🚀 Server (STABLE 5001) running on port ${PORT}`);
+        console.log('🗝️ OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
+      });
+    }
   })
   .catch(err => {
     console.error('❌ Database connection failed:', err.message);
@@ -47,9 +49,13 @@ db.query('SELECT NOW()')
     }
     console.error('👉 TIP: Verify your Supabase project status and network connectivity.');
     console.warn('⚠️ SERVER WARNING: Starting in LIMITED MODE (No Database Connection)');
-    console.log('🚀 Attempting to listen on port', PORT);
-    app.listen(PORT, () => {
-      console.log(`🚀 Server (LIMITED) running on port ${PORT}`);
-      console.log('🗝️ OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
-    });
+    if (require.main === module) {
+      console.log('🚀 Attempting to listen on port', PORT);
+      app.listen(PORT, () => {
+        console.log(`🚀 Server (LIMITED) running on port ${PORT}`);
+        console.log('🗝️ OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
+      });
+    }
   });
+
+module.exports = app;
