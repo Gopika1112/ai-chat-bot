@@ -14,18 +14,18 @@ const requiredEnvVars = [
     'SUPABASE_ANON_KEY'
 ];
 
-const missingVars = requiredEnvVars.filter(key => !process.env[key]);
+const missingVars = requiredEnvVars.filter(key => !process.env[key] && !process.env[`VITE_${key}`]);
 
 if (missingVars.length > 0) {
     console.error(`🚨 CRITICAL CONFIGURATION ERROR: Missing required server environment variables: ${missingVars.join(', ')}`);
-    console.error(`Please check your server/.env file or Vercel environment variables.`);
-    process.exit(1); // Exit if missing crucial environment variables to avoid blank failures/weird errors
+    console.error(`Please check your Vercel environment variables. This will cause 500 errors.`);
 }
 
 // Ensure no secrets are leaked in console log strings
 module.exports = {
+    MISSING_VARS: missingVars,
     PORT: process.env.PORT || 5000,
-    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_URL: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,

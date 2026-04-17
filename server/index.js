@@ -18,44 +18,44 @@ app.use('/api/documents', docRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 
+const config = require('./config');
+
+if (config.MISSING_VARS && config.MISSING_VARS.length > 0) {
+  console.warn('⚠️ Server running with degraded config. Missing:', config.MISSING_VARS.join(', '));
+}
+
 // Global Error Handler for Multer/Other issues
 app.use((err, req, res, next) => {
-  console.error('🔥 Global Error:', err.message);
+  console.error('🔥 Global Error Caught in Serverless Boundary:', err.message);
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ error: `Upload error: ${err.message}` });
   }
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
-console.log('🏁 Server starting...');
-
-const db = require('./db');
-console.log('📜 Testing DB connection...');
-db.query('SELECT NOW()')
-  .then(() => {
-    console.log('✅ Database connected successfully');
-    if (require.main === module) {
-      console.log('🚀 Attempting to listen on port', PORT);
+// Avoid triggering floating Unhandled Promise Rejections inside Serverless invocation environments.
+if (require.main === module) {
+  // Only execute this continuous DB listener code if running locally natively via nodemon/node
+  console.log('🏁 Starting local development Express server...');
+  const db = require('./db');
+  console.log('📜 Testing Local DB connection...');
+  
+  db.query('SELECT NOW()')
+    .then(() => {
+      console.log('✅ Local Database connected successfully');
       app.listen(PORT, () => {
-        console.log(`🚀 Server (STABLE) running on port ${PORT}`);
-        console.log('🚀 Server logic initialized.');
+        console.log(`🚀 Server running dynamically on http://localhost:${PORT}`);
       });
-    }
-  })
-  .catch(err => {
-    console.error('❌ Database connection failed:', err.message);
-    if (err.message.includes('password authentication failed')) {
-      console.error('💡 HINT: Check your database password in .env and ensure special characters are URL-encoded.');
-    }
-    console.error('👉 TIP: Verify your Supabase project status and network connectivity.');
-    console.warn('⚠️ SERVER WARNING: Starting in LIMITED MODE (No Database Connection)');
-    if (require.main === module) {
-      console.log('🚀 Attempting to listen on port', PORT);
-      app.listen(PORT, () => {
-        console.log(`🚀 Server (LIMITED) running on port ${PORT}`);
-        console.log('🚀 Server (LIMITED) logic initialized.');
-      });
-    }
-  });
+    })
+    .catch(err => {
+      console.error('❌ Local Database connection failed:', err.message);
+      console.warn('⚠️ Falling back to Database-less mode for local UI testing.');
+      app.listen(PORT, () => console.log(`🚀 Server started safely on port ${PORT}`));
+    });
+} else {
+  // Production / Serverless Mode (Vercel)
+  // We simply export the Express app for Vercel's @vercel/node engine to intercept HTTP traffic
+  console.log('⚡ Vercel Serverless Function module activated.');
+}
 
 module.exports = app;
