@@ -14,8 +14,8 @@ const router = express.Router();
 // Use disk storage to handle large files (avoiding OOM)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+    const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'uploads/'; // Vercel bypass
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -59,7 +59,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       const parser = new PDFParse({ data: fileBuffer });
       const result = await parser.getText();
       text = result.text;
-      fs.writeFileSync('extraction_sample.txt', text.substring(0, 500));
+      // Removed extraction_sample.txt write to prevent EROFS on Vercel
     } else if (file.mimetype === 'text/plain') {
       text = fs.readFileSync(filePath, 'utf-8');
     } else {
@@ -80,7 +80,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     // Chunk text
     const chunks = chunkText(text);
     console.log(`🧩 Chunks created: ${chunks.length}`);
-    fs.appendFileSync('error.log', `[${new Date().toISOString()}] Chunks created for ${file.originalname}: ${chunks.length}\n`);
+    // Removed error.log append to prevent EROFS on Vercel
 
 
     // Generate embeddings in batches of 100 (Gemini batch limit)
@@ -103,7 +103,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         }));
       } catch (err) {
         console.error(`Batch Embedding Error at offset ${i}:`, err.message);
-        fs.appendFileSync('error.log', `[${new Date().toISOString()}] Batch Embedding Error: ${err.message}\n`);
+        // Removed error.log append
       }
     }
 

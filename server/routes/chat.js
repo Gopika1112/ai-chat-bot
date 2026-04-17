@@ -157,7 +157,7 @@ router.post('/query', auth, async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Chat Error:', error);
-    fs.appendFileSync('debug.log', `[${new Date().toISOString()}] Chat Query Error: ${error.message}\n${error.stack}\n`);
+    // Removed fs.appendFileSync('debug.log', ...) to prevent EROFS crash on Vercel Serverless
     res.status(500).json({ error: error.message || 'Failed to generate response' });
   }
 });
