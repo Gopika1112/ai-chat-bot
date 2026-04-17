@@ -11,58 +11,62 @@ let lastRequestTime = 0;
 const queryCache = new Map(); // Simple in-memory cache
 
 router.post('/query', auth, async (req, res) => {
-  const { question, chatId, documentId } = req.body;
-  if (!question) return res.status(400).json({ error: 'Question is required' });
-
-  // 0. Check Cache First
-  const cacheKey = `${req.user.id}:${question.toLowerCase().trim()}`;
-  if (queryCache.has(cacheKey)) {
-    console.log('🎯 Cache Hit: Returning stored response');
-    const cachedData = queryCache.get(cacheKey);
-    
-    // Optional: Only return if recent (e.g., 1 hour)
-    if (Date.now() - cachedData.timestamp < 3600000) {
-      res.setHeader('X-Chat-Id', chatId || 'cached');
-      return res.send(cachedData.response);
-    }
-  }
-
-  const now = Date.now();
-  if (now - lastRequestTime < 2000) {
-    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
-  }
-  lastRequestTime = now;
-
+  console.log(`\n[🚀 POST /api/chat/query] Request Entry -> User: ${req.user?.id || 'Unknown'}`);
+  
   try {
-    const { question, chatId, documentId } = req.body;
-    if (!question) return res.status(400).json({ error: 'Question is required' });
+    const body = req.body || {};
+    console.log(`[📦 Request Body]: ${JSON.stringify(body).substring(0, 150)}...`);
+    const { question, chatId, documentId } = body;
+    
+    if (!question) {
+      console.warn('⚠️ [Validation] Missing question in request body.');
+      return res.status(400).json({ success: false, error: 'Question is required', details: 'req.body.question is empty' });
+    }
+
+    // 0. Check Cache First
+    const cacheKey = `${req.user.id}:${question.toLowerCase().trim()}`;
+    if (queryCache.has(cacheKey)) {
+      console.log('🎯 [Cache Hit]: Returning stored response without hitting DB/AI');
+      const cachedData = queryCache.get(cacheKey);
+      if (Date.now() - cachedData.timestamp < 3600000) { // 1 hour
+        res.setHeader('X-Chat-Id', chatId || 'cached');
+        return res.send(cachedData.response); // Text response
+      }
+    }
+
+    // Rate Limiter
+    const now = Date.now();
+    if (now - lastRequestTime < 2000) {
+      console.warn('⚠️ [Rate Limiter] User clicking too fast.');
+      return res.status(429).json({ success: false, error: 'Too many requests. Please slow down.' });
+    }
+    lastRequestTime = now;
 
     // 1. Embed the question
-    console.log('🤖 Embedding question:', question.substring(0, 50));
+    console.log(`🤖 [Embedding Phase] Question: "${question.substring(0, 50)}..."`);
     const questionEmbedding = await getEmbeddings(question);
-    console.log(`📏 Question Embedding Dimension: ${questionEmbedding.length}`);
+    console.log(`📏 [Embedding Complete] Dimension: ${questionEmbedding.length}`);
     const embeddingArray = `[${questionEmbedding.join(',')}]`;
 
     // 2. Search for relevant chunks
-    console.log(`🔍 Searching database for chunks... ${documentId ? `(Filtered to doc: ${documentId})` : '(Auto-scoping to last uploaded doc)'}`);
-    
+    console.log(`🔍 [Database Search Phase] Scope: ${documentId ? `Filtered to doc ${documentId}` : 'Auto-scoping'}`);
     let effectiveDocId = documentId;
     if (effectiveDocId === 'none') {
-      effectiveDocId = null; // Explicitly no context
+      effectiveDocId = null;
     } else if (!effectiveDocId) {
-      // Auto-scope only if documentId is missing or empty
       const lastDocRes = await db.query(
         'SELECT id FROM documents WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
         [req.user.id]
       );
       if (lastDocRes.rows.length > 0) {
         effectiveDocId = lastDocRes.rows[0].id;
-        console.log(`📌 Scoping context to document ID: ${effectiveDocId}`);
+        console.log(`📌 [Auto-Scope] Selected recent document ID: ${effectiveDocId}`);
       }
     }
 
     let searchResult;
     if (effectiveDocId) {
+      console.log(`⏳ Executing pgvector similarity search on doc: ${effectiveDocId}...`);
       searchResult = await db.query(
         `SELECT dc.content, d.filename, d.summary 
          FROM document_chunks dc
@@ -73,24 +77,22 @@ router.post('/query', auth, async (req, res) => {
         [req.user.id, effectiveDocId, embeddingArray]
       );
     } else {
-      // Fallback: No documents found at all
       searchResult = { rows: [] };
-      console.log('⚠️ No documents found for this user. Answering from general knowledge.');
+      console.log('⚠️ [No Context Strategy] No documents found. AI will answer from general knowledge.');
     }
 
-    console.log(`📊 Found ${searchResult.rows.length} relevant chunks`);
+    console.log(`📊 [Search Complete] Retrieved ${searchResult.rows.length} relevant chunks from PostgreSQL.`);
     const context = searchResult.rows.map(r => `Source: ${r.filename}\nContent: ${r.content}`).join('\n\n');
     const sources = [...new Set(searchResult.rows.map(r => r.filename))];
     const firstDocSummary = searchResult.rows[0]?.summary;
 
-    // --- SHORT-CIRCUIT: If asking for summary, return pre-computed summary ---
+    // --- SHORT-CIRCUIT: Pre-computed summary ---
     const q = question.toLowerCase();
     if (q.includes('summarize') || q.includes('summary') || q.includes('what is this') || q.includes('key points')) {
       if (firstDocSummary) {
-        console.log('⚡ Short-circuiting: Returning pre-computed summary');
+        console.log('⚡ [Short-circuit] Returning pre-computed summary directly.');
         const summaryResponse = `Here is the summary of **${sources[0]}**:\n\n${firstDocSummary}`;
         
-        // Save assistant message and return
         let currentChatId = chatId;
         if (!currentChatId) {
           const chatRes = await db.query('INSERT INTO chats (user_id, title) VALUES ($1, $2) RETURNING id', [req.user.id, question.substring(0, 50)]);
@@ -104,7 +106,8 @@ router.post('/query', auth, async (req, res) => {
       }
     }
 
-    // 3. Get Chat History for context
+    // 3. Get Chat History
+    console.log(`⏳ [History Phase] Fetching logic for chat ID: ${chatId || 'NEW_CHAT'}`);
     let currentChatId = chatId;
     let history = [];
     if (currentChatId) {
@@ -119,46 +122,69 @@ router.post('/query', auth, async (req, res) => {
         [req.user.id, question.substring(0, 50)]
       );
       currentChatId = chatResult.rows[0].id;
+      console.log(`🆕 [New Chat] Generated ID: ${currentChatId}`);
     }
 
-    // Save user message
-    await db.query(
-      'INSERT INTO messages (chat_id, role, content) VALUES ($1, $2, $3)',
-      [currentChatId, 'user', question]
-    );
+    await db.query('INSERT INTO messages (chat_id, role, content) VALUES ($1, $2, $3)', [currentChatId, 'user', question]);
 
     // 4. Stream AI response
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('X-Chat-Id', currentChatId);
+    console.log(`⏳ [AI Generation Phase] Triggering upstream provider logic...`);
+    
+    // Defer writing headers until the stream starts successfully to prevent ERR_HTTP_HEADERS_SENT
+    let isStreamingInitiated = false;
 
     const fullContent = await aiProvider.callAI({
       question,
       context: context.slice(0, 10000),
       history,
       onChunk: (chunkText) => {
+        if (!isStreamingInitiated) {
+          console.log(`🌊 [Stream] First byte received, explicitly starting text chunking.`);
+          res.setHeader('Content-Type', 'text/plain');
+          res.setHeader('X-Chat-Id', currentChatId);
+          isStreamingInitiated = true;
+        }
         res.write(chunkText);
       }
     });
 
-    console.log('✨ Gemini Streaming Complete');
+    console.log('✨ [Success] LLM Stream Completed securely.');
 
-    // Save to Cache
-    queryCache.set(cacheKey, {
-      response: fullContent,
-      timestamp: Date.now()
-    });
+    // If stream ended but chunk callback never fired (edge case of empty response)
+    if (!isStreamingInitiated) {
+       res.setHeader('Content-Type', 'text/plain');
+       res.setHeader('X-Chat-Id', currentChatId);
+       res.write(fullContent || "Hmm, I didn't get a proper response.");
+    }
 
-    // Save assistant message
+    queryCache.set(cacheKey, { response: fullContent, timestamp: Date.now() });
+
     await db.query(
       'INSERT INTO messages (chat_id, role, content, sources) VALUES ($1, $2, $3, $4)',
       [currentChatId, 'assistant', fullContent, JSON.stringify(sources)]
     );
 
-    res.end();
+    res.end(); // Safely terminate the Vercel execution boundary
+
   } catch (error) {
-    console.error('Chat Error:', error);
-    // Removed fs.appendFileSync('debug.log', ...) to prevent EROFS crash on Vercel Serverless
-    res.status(500).json({ error: error.message || 'Failed to generate response' });
+    console.error('\n❌ [FATAL ROUTE CRASH] Caught exception in /chat/query:', error);
+    
+    const errorPayload = {
+      success: false,
+      error: error.message || 'The server encountered an unexpected error generating the AI response.',
+      details: error.stack || 'No details available'
+    };
+
+    if (res.headersSent) {
+      console.error('⚠️ [Error Handling] Headers were already sent! Returning fallback string to stream.');
+      if (!res.writableEnded) {
+        res.write(`\n\n[SYSTEM ERROR]: ${errorPayload.error}`);
+        res.end();
+      }
+    } else {
+      console.log('↩️ [Error Handling] Sending clean JSON 500 rejection to client.');
+      res.status(500).json(errorPayload);
+    }
   }
 });
 

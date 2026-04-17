@@ -5,16 +5,17 @@ const fs = require('fs');
 
 class AIProvider {
     constructor() {
-        this.gemini = new GoogleGenerativeAI(config.GEMINI_API_KEY);
+        // Safe Initialization: Avoid throwing errors on Vercel module instantiation if keys are missing
+        this.gemini = config.GEMINI_API_KEY ? new GoogleGenerativeAI(config.GEMINI_API_KEY) : null;
         
-        this.openRouter = new OpenAI({
+        this.openRouter = config.OPENROUTER_API_KEY ? new OpenAI({
             apiKey: config.OPENROUTER_API_KEY,
             baseURL: "https://openrouter.ai/api/v1",
             defaultHeaders: {
-                "HTTP-Referer": "http://localhost:5001",
+                "HTTP-Referer": "http://localhost:5000",
                 "X-Title": "AI Document Assistant",
             }
-        });
+        }) : null;
 
         this.groq = config.GROQ_API_KEY ? new OpenAI({
             apiKey: config.GROQ_API_KEY,
@@ -62,11 +63,12 @@ ${context}`
             : `You are a helpful AI assistant. Answer all questions using your general knowledge. Maintain a helpful, professional, and friendly tone.`;
 
         if (provider === 'gemini') {
+            if (!this.gemini) throw new Error("GEMINI_API_KEY is completely missing in Vercel environment.");
             return await this._streamGemini(model, question, systemPrompt, onChunk, history);
         } else if (provider === 'openrouter' || provider === 'groq') {
             return await this._streamOpenAI(provider, model, question, systemPrompt, onChunk, history);
         } else {
-            throw new Error(`Unsupported provider: ${provider}`);
+            throw new Error(`Unsupported AI provider mapping: ${provider}`);
         }
     }
 

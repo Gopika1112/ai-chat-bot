@@ -1,8 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const config = require('../config');
 
-// Initialize Gemini for Embeddings
-const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
+// Initialize Gemini for Embeddings safely to avoid Vercel module instantiation crashes
+const genAI = config.GEMINI_API_KEY ? new GoogleGenerativeAI(config.GEMINI_API_KEY) : null;
 
 /**
  * Generates embeddings for a single piece of text.
