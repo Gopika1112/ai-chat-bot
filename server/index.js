@@ -37,8 +37,8 @@ db.query('SELECT NOW()')
     if (require.main === module) {
       console.log('🚀 Attempting to listen on port', PORT);
       app.listen(PORT, () => {
-        console.log(`🚀 Server (STABLE 5001) running on port ${PORT}`);
-        console.log('🗝️ OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
+        console.log(`🚀 Server (STABLE) running on port ${PORT}`);
+        console.log('🚀 Server logic initialized.');
       });
     }
   })
@@ -53,7 +53,7 @@ db.query('SELECT NOW()')
       console.log('🚀 Attempting to listen on port', PORT);
       app.listen(PORT, () => {
         console.log(`🚀 Server (LIMITED) running on port ${PORT}`);
-        console.log('🗝️ OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
+        console.log('🚀 Server (LIMITED) logic initialized.');
       });
     }
   });

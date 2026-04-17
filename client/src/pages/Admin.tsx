@@ -12,7 +12,7 @@ const Admin: React.FC = () => {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
         const [usersRes, docsRes, analyticsRes] = await Promise.all([
           axios.get(`${apiBaseUrl}/admin/users`),
           axios.get(`${apiBaseUrl}/admin/documents`),

@@ -101,7 +101,7 @@ const Chat: React.FC = () => {
     if (!token) return;
     setDocsLoading(true);
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await axios.get(`${apiBaseUrl}/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -119,7 +119,7 @@ const Chat: React.FC = () => {
 
   const handleInitialDocChat = async (docId: string) => {
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await axios.get(`${apiBaseUrl}/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -142,7 +142,7 @@ const Chat: React.FC = () => {
 
   const fetchHistory = async () => {
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await axios.get(`${apiBaseUrl}/chat/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -157,7 +157,7 @@ const Chat: React.FC = () => {
     setIsChatLoading(true);
     setMessages([]); 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await axios.get(`${apiBaseUrl}/chat/messages/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -203,7 +203,7 @@ const Chat: React.FC = () => {
     }
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       await axios.delete(`${apiBaseUrl}/chat/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -221,7 +221,7 @@ const Chat: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await axios.post(`${apiBaseUrl}/documents/upload`, formData, {
         headers: { 
           'Content-Type': 'multipart/form-data',
@@ -251,7 +251,7 @@ const Chat: React.FC = () => {
     }
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       await axios.delete(`${apiBaseUrl}/documents/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -293,7 +293,7 @@ const Chat: React.FC = () => {
     setIsSendingMessage(true);
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const response = await fetch(`${apiBaseUrl}/chat/query`, {
         method: 'POST',
         headers: {

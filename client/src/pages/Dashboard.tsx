@@ -12,7 +12,7 @@ const Dashboard: React.FC = () => {
   const fetchDocs = async () => {
     if (!token) return;
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const res = await axios.get(`${apiBaseUrl}/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -31,7 +31,7 @@ const Dashboard: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       await axios.delete(`${apiBaseUrl}/documents/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
                   <button 
                     className="doc-action-btn view" 
                     title="View Original"
-                    onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'}/documents/${doc.id}/view`, '_blank')}
+                    onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/documents/${doc.id}/view`, '_blank')}
                   >
                     <ExternalLink size={16} />
                   </button>

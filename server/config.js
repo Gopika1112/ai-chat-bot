@@ -5,13 +5,26 @@ const dotenv = require('dotenv');
 const envPath = path.join(__dirname, '.env');
 dotenv.config({ path: envPath });
 
-// Log for debugging (but only if missing essential keys)
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error(`⚠️ Configuration Warning: Missing keys in ${envPath}`);
+// Server-side required environment variables validation
+const requiredEnvVars = [
+    'DATABASE_URL',
+    'JWT_SECRET',
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_ANON_KEY'
+];
+
+const missingVars = requiredEnvVars.filter(key => !process.env[key]);
+
+if (missingVars.length > 0) {
+    console.error(`🚨 CRITICAL CONFIGURATION ERROR: Missing required server environment variables: ${missingVars.join(', ')}`);
+    console.error(`Please check your server/.env file or Vercel environment variables.`);
+    process.exit(1); // Exit if missing crucial environment variables to avoid blank failures/weird errors
 }
 
+// Ensure no secrets are leaked in console log strings
 module.exports = {
-    PORT: 5001, // FORCED TO 5001 FOR CLIENT CONSISTENCY
+    PORT: process.env.PORT || 5000,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     DATABASE_URL: process.env.DATABASE_URL,

@@ -13,7 +13,8 @@ import Admin from './pages/Admin.tsx';
 import './App.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-console.log('🔍 Vite Client ID loaded:', GOOGLE_CLIENT_ID ? 'YES' : 'MISSING');
+const REQUIRED_ENV_VARS = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_API_BASE_URL'];
+const missingEnvVars = REQUIRED_ENV_VARS.filter(key => !import.meta.env[key]);
 
 import { useAuth } from './context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -55,6 +56,19 @@ const MainLayout = () => {
 };
 
 function App() {
+  if (missingEnvVars.length > 0) {
+    return (
+      <div style={{ padding: '2rem', color: '#ff4a4a', fontFamily: 'sans-serif', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+        <h2>⚠️ Configuration Error</h2>
+        <p>The application is missing required frontend environment variables.</p>
+        <p>Please check your <code>client/.env.local</code> file or Vercel environment variables.</p>
+        <ul style={{ textAlign: 'left', background: '#ffecec', padding: '1rem', borderRadius: '8px' }}>
+          {missingEnvVars.map(v => <li key={v}>Missing: <strong>{v}</strong></li>)}
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
