@@ -74,9 +74,9 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<PageWrapper><Login /></PageWrapper>} />
+            <Route path="/" element={<PageWrapper><AuthRedirect><Login /></AuthRedirect></PageWrapper>} />
             <Route path="/login" element={<PageWrapper><AuthRedirect><Login /></AuthRedirect></PageWrapper>} />
-            <Route path="/landing" element={<PageWrapper><Login /></PageWrapper>} />
+            <Route path="/landing" element={<PageWrapper><AuthRedirect><Login /></AuthRedirect></PageWrapper>} />
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
               <Route path="/chat" element={<PageWrapper><Chat /></PageWrapper>} />

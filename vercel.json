@@ -17,8 +17,20 @@
       "destination": "server/index.js"
     },
     {
+      "source": "/assets/(.*)",
+      "destination": "client/assets/$1"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "client/favicon.ico"
+    },
+    {
+      "source": "/vite.svg",
+      "destination": "client/vite.svg"
+    },
+    {
       "source": "/(.*)",
-      "destination": "client/$1"
+      "destination": "client/index.html"
     }
   ],
   "env": {
