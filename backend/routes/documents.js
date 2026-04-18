@@ -2,7 +2,13 @@ const express = require('express');
 const multer = require('multer');
 
 // pdfjs-dist: pure JS, no native modules, works on Vercel serverless
-const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+let pdfjsLib;
+try {
+  pdfjsLib = require('pdfjs-dist/legacy/build/pdf');
+} catch (e) {
+  console.warn('Failed to load from legacy, trying standard build...');
+  pdfjsLib = require('pdfjs-dist/build/pdf');
+}
 pdfjsLib.GlobalWorkerOptions.workerSrc = false;
 
 async function extractPdfText(buffer) {
