@@ -38,7 +38,7 @@ module.exports = {
     
     // AI Model Strategy
     AI: {
-        PRIMARY_MODEL: 'google/gemini-2.0-flash',
+        PRIMARY_MODEL: 'google/gemini-1.5-flash',
         FALLBACK_MODELS: [
             { provider: 'openrouter', model: 'google/gemini-2.0-flash-lite-preview-02-05:free' },
             { provider: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct' },

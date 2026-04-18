@@ -7,7 +7,8 @@ const path = require('path');
 if (typeof global.DOMMatrix === 'undefined') {
   global.DOMMatrix = class DOMMatrix {};
 }
-const pdf = require('pdf-parse');
+const pdfRaw = require('pdf-parse');
+const pdf = typeof pdfRaw === 'function' ? pdfRaw : pdfRaw.default;
 const db = require('../db');
 const auth = require('../middleware/auth');
 const { chunkText } = require('../utils/chunker');

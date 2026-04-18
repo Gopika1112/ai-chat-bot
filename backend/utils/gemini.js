@@ -16,7 +16,7 @@ const getEmbeddings = async (text) => {
     const model = genAI.getGenerativeModel({ 
       model: "text-embedding-004",
       outputDimensionality: 768 
-    }, { apiVersion: 'v1' });
+    }, { apiVersion: 'v1beta' });
     
     // Attempt with retry logic for 429
     const makeRequest = async (retries = 3) => {
@@ -48,7 +48,7 @@ const batchEmbedChunks = async (chunks) => {
     const model = genAI.getGenerativeModel({ 
       model: "text-embedding-004",
       outputDimensionality: 768 
-    }, { apiVersion: 'v1' });
+    }, { apiVersion: 'v1beta' });
     
     const requests = chunks.map(chunk => ({
       content: { parts: [{ text: chunk.toString().replace(/\n/g, ' ') }] }

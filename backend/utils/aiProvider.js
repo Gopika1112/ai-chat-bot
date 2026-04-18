@@ -76,7 +76,7 @@ ${context}`
         const model = this.gemini.getGenerativeModel({ 
             model: modelName.replace('google/', ''), 
             systemInstruction 
-        }, { apiVersion: 'v1' });
+        }, { apiVersion: 'v1beta' });
 
         // Convert history for Gemini format
         const chatHistory = history.map(m => ({

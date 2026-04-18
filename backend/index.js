@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const { PORT } = require('./config');
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Bypass SSL chain issues in dev
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Removed to avoid interference with pg-pool SSL config
 
 const authRoutes = require('./routes/auth');
 const docRoutes = require('./routes/documents');

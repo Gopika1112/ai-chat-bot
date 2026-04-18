@@ -6,8 +6,12 @@ const pool = new Pool({
   ssl: config.DATABASE_URL?.includes('supabase.co') ? {
     rejectUnauthorized: false,
   } : false,
-  connectionTimeoutMillis: 10000, 
+  connectionTimeoutMillis: 30000, 
+  idleTimeoutMillis: 30000,
+  max: 20
 });
+
+console.log(`📡 [DB] Connecting to: ${config.DATABASE_URL?.split('@')[1]?.split(':')[0]}`);
 
 pool.on('error', (err) => {
   console.error('❌ Unexpected DB client error:', err.message);
