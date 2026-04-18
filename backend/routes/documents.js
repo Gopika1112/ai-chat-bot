@@ -9,6 +9,7 @@ if (typeof global.DOMMatrix === 'undefined') {
 }
 const pdfRaw = require('pdf-parse');
 const pdf = typeof pdfRaw === 'function' ? pdfRaw : pdfRaw.default;
+const mammoth = require('mammoth');
 const db = require('../db');
 const auth = require('../middleware/auth');
 const { chunkText } = require('../utils/chunker');
@@ -60,8 +61,11 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       const fileBuffer = fs.readFileSync(filePath);
       const result = await pdf(fileBuffer);
       text = result.text;
-    } else if (file.mimetype === 'text/plain') {
+    } else if (file.mimetype === 'text/plain' || file.mimetype === 'text/markdown') {
       text = fs.readFileSync(filePath, 'utf-8');
+    } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      const docResult = await mammoth.extractRawText({ path: filePath });
+      text = docResult.value;
     } else {
       return res.status(400).json({ error: 'Unsupported file type' });
     }
