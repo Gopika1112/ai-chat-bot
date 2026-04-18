@@ -58,7 +58,7 @@ router.get('/', auth, async (req, res) => {
 const { supabase } = require('../supabase');
 
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
-  console.log('🚀 [INGESTION START] Root deployment trace: File received');
+  let progress = "0: Initializing";
   let localPath = '';
   try {
     const { file } = req;
@@ -66,8 +66,8 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     localPath = file.path;
 
     // 1. DYNAMIC EXTRACTION
+    progress = "1: Extraction";
     let text = '';
-    console.log(`📝 [Extraction]: Processing ${file.mimetype}...`);
     if (file.mimetype === 'application/pdf') {
       const fileBuffer = fs.readFileSync(localPath);
       const result = await pdf(fileBuffer);
@@ -86,7 +86,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     }
 
     // 2. CLOUD STORAGE UPLOAD (Supabase)
-    console.log('☁️ [Cloud Storage]: Uploading to Supabase documents bucket...');
+    progress = "2: Cloud Storage Upload";
     const storagePath = `user_${req.user.id}/${Date.now()}-${file.originalname}`;
     const fileBuffer = fs.readFileSync(localPath);
     
@@ -97,9 +97,10 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
         upsert: true
       });
 
-    if (storageError) throw new Error(`Supabase Storage Error: ${storageError.message}`);
+    if (storageError) throw new Error(`Storage Error: ${storageError.message}`);
 
     // 3. DATABASE RECORDING
+    progress = "3: Save to Database";
     const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/documents/${storagePath}`;
     const docResult = await db.query(
       'INSERT INTO documents (user_id, filename, file_type, file_path) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -108,9 +109,9 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     const documentId = docResult.rows[0].id;
 
     // 4. CHUNKING & EMBEDDINGS (RAG PREP)
-    console.log('✂️ [Chunking]: Generating vector embeddings...');
+    progress = "4: Chunks & Embeddings";
     const chunks = chunkText(text);
-    const BATCH_SIZE = 50; // Smaller batch for serverless stability
+    const BATCH_SIZE = 50; 
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
       const batch = chunks.slice(i, i + BATCH_SIZE);
       const embeddings = await batchEmbedChunks(batch);
@@ -124,25 +125,26 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     }
 
     // 5. SUMMARIZATION
+    progress = "5: Summarization";
     let summary = 'Summary generation failed or timed out.';
     try {
-      const prompt = `Summarize the following content in 2-3 structured paragraphs. Focus on key themes.\n\nCONTENT:\n${text.substring(0, 8000)}`;
+      const prompt = `Summarize: ${text.substring(0, 8000)}`;
       summary = await aiProvider.callAI({ question: prompt });
       await db.query('UPDATE documents SET summary = $1 WHERE id = $2', [summary, documentId]);
     } catch (sumErr) {
-      console.warn('⚠️ [Summarization Timeout/Skip]:', sumErr.message);
+      console.warn('⚠️ Summarization Skip:', sumErr.message);
     }
 
-    // Cleanup local temp file
     if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-
-    console.log('✨ [COMPLETE]: Document successfully ingested and stored in cloud.');
     res.json({ message: 'Document processed successfully', documentId, summary });
 
   } catch (error) {
-    console.error('❌ [FATAL UPLOAD ERROR]:', error.message);
+    console.error(`❌ [FAILED AT STEP ${progress}]:`, error.message);
     if (localPath && fs.existsSync(localPath)) fs.unlinkSync(localPath);
-    res.status(500).json({ error: error.message || 'Server encountered an error during upload' });
+    res.status(500).json({ 
+        error: `Upload failed at Step ${progress}`, 
+        message: error.message 
+    });
   }
 });
 
