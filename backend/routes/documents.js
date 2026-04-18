@@ -1,29 +1,26 @@
 const express = require('express');
 const multer = require('multer');
 
-// pdfjs-dist: pure JS, no native modules, works on Vercel serverless
-let pdfjsLib;
+// --- Vercel Serverless Polyfill ---
+if (typeof global.DOMMatrix === 'undefined') {
+  global.DOMMatrix = class DOMMatrix {};
+}
+
+// --- Robust pdf-parse Loader ---
+let pdf;
 try {
-  pdfjsLib = require('pdfjs-dist/legacy/build/pdf');
-} catch (e) {
-  console.warn('Failed to load from legacy, trying standard build...');
-  pdfjsLib = require('pdfjs-dist/build/pdf');
+  const pdfModule = require('pdf-parse');
+  // Handle various export shapes (Standard, ESM, and Vercel-specific bundles)
+  pdf = (typeof pdfModule === 'function') 
+    ? pdfModule 
+    : (pdfModule.default && typeof pdfModule.default === 'function')
+      ? pdfModule.default 
+      : (pdfModule.pdf && typeof pdfModule.pdf === 'function')
+        ? pdfModule.pdf
+        : pdfModule;
+} catch (err) {
+  console.error('pdf-parse initialization failed:', err.message);
 }
-pdfjsLib.GlobalWorkerOptions.workerSrc = false;
-
-async function extractPdfText(buffer) {
-  const uint8Array = new Uint8Array(buffer);
-  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
-  const pdfDoc = await loadingTask.promise;
-  let fullText = '';
-  for (let i = 1; i <= pdfDoc.numPages; i++) {
-    const page = await pdfDoc.getPage(i);
-    const content = await page.getTextContent();
-    fullText += content.items.map(item => item.str).join(' ') + '\n';
-  }
-  return fullText;
-}
-
 
 const mammoth = require('mammoth');
 const db = require('../db');
@@ -33,22 +30,21 @@ const { batchEmbedChunks } = require('../utils/gemini');
 const aiProvider = require('../utils/aiProvider');
 const router = express.Router();
 
-// ── multer: memoryStorage (Vercel filesystem is read-only) ──────────────────
+// --- Multer: Memory Storage (Vercel filesystem is read-only) ---
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 4.5 * 1024 * 1024 }
 });
 
-// ── Supabase: import at top level with error catching ───────────────────────
+// --- Supabase: Import from central config ---
 let supabase;
 try {
   supabase = require('../supabase').supabase;
-  if (!supabase) throw new Error('supabase client is null');
 } catch (err) {
-  console.error('Supabase import failed:', err.message);
+  console.error('Supabase initialization failed:', err.message);
 }
 
-// ── GET /documents ──────────────────────────────────────────────────────────
+// GET all documents
 router.get('/', auth, async (req, res) => {
   try {
     const result = await db.query(
@@ -62,67 +58,45 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// ── POST /documents/upload ──────────────────────────────────────────────────
+// POST upload
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
   let progress = '0: Initializing';
   try {
-    // Guard: supabase must be ready
-    if (!supabase) {
-      return res.status(500).json({
-        error: 'Upload failed at Step 0: Supabase not initialized',
-        message: 'Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to Vercel Dashboard → Settings → Environment Variables, then redeploy.'
-      });
-    }
-
+    if (!supabase) throw new Error('Supabase client not available');
     const { file } = req;
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const fileBuffer = file.buffer; // memoryStorage — no disk path exists
+    const fileBuffer = file.buffer;
 
-    // ── STEP 1: Extract text ────────────────────────────────────────────────
+    // STEP 1: Text extraction
     progress = '1: Extraction';
     let text = '';
     const isImage = file.mimetype.startsWith('image/');
 
     if (file.mimetype === 'application/pdf') {
-      text = await extractPdfText(fileBuffer);
-
-    } else if (
-      file.mimetype === 'text/plain' ||
-      file.mimetype === 'text/markdown'
-    ) {
+      if (typeof pdf !== 'function') throw new Error('PDF extractor not loaded');
+      const result = await pdf(fileBuffer);
+      text = result.text;
+    } else if (file.mimetype === 'text/plain' || file.mimetype === 'text/markdown') {
       text = fileBuffer.toString('utf-8');
-
-    } else if (
-      file.mimetype ===
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ) {
-      // mammoth must use buffer: not path: (no local file exists in serverless)
+    } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       const docResult = await mammoth.extractRawText({ buffer: fileBuffer });
       text = docResult.value;
-
     } else if (isImage) {
-      text = `[Image Content: ${file.originalname}]`;
-
-    } else {
-      return res.status(400).json({
-        error: 'Unsupported file type. Supported: PDF, DOCX, TXT, PNG, JPG.'
-      });
+      text = `[Image: ${file.originalname}]`;
     }
 
-    // ── STEP 2: Upload to Supabase Storage ──────────────────────────────────
-    progress = '2: Cloud Storage Upload';
+    // STEP 2: Storage
+    progress = '2: Storage';
     const storagePath = `user_${req.user.id}/${Date.now()}-${file.originalname}`;
     const { error: storageError } = await supabase.storage
       .from('documents')
-      .upload(storagePath, fileBuffer, {
-        contentType: file.mimetype,
-        upsert: true
-      });
+      .upload(storagePath, fileBuffer, { contentType: file.mimetype, upsert: true });
+
     if (storageError) throw new Error(`Storage Error: ${storageError.message}`);
 
-    // ── STEP 3: Save metadata to database ───────────────────────────────────
-    progress = '3: Save to Database';
+    // STEP 3: DB
+    progress = '3: Database';
     const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/documents/${storagePath}`;
     const docResult = await db.query(
       'INSERT INTO documents (user_id, filename, file_type, file_path) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -130,104 +104,68 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     );
     const documentId = docResult.rows[0].id;
 
-    // ── STEP 4: Chunk and embed (skip images) ────────────────────────────────
+    // STEP 4: AI Logic
     if (!isImage && text.trim().length > 0) {
-      progress = '4: Chunks & Embeddings';
+      progress = '4: AI processing';
       const chunks = chunkText(text);
       const BATCH_SIZE = 50;
       for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
         const batch = chunks.slice(i, i + BATCH_SIZE);
         const embeddings = await batchEmbedChunks(batch);
-        await Promise.all(
-          batch.map((chunk, index) => {
-            const embeddingArray = `[${embeddings[index].join(',')}]`;
-            return db.query(
-              'INSERT INTO document_chunks (document_id, content, embedding) VALUES ($1, $2, $3)',
-              [documentId, chunk, embeddingArray]
-            );
-          })
-        );
+        await Promise.all(batch.map((chunk, index) => {
+          return db.query(
+            'INSERT INTO document_chunks (document_id, content, embedding) VALUES ($1, $2, $3)',
+            [documentId, chunk, `[${embeddings[index].join(',')}]`]
+          );
+        }));
       }
-    }
 
-    // ── STEP 5: Summarize ────────────────────────────────────────────────────
-    progress = '5: Summarization';
-    let summary = isImage
-      ? 'Image uploaded successfully.'
-      : 'Summary unavailable.';
-    if (!isImage && text.trim().length > 0) {
+      // Summary
       try {
-        summary = await aiProvider.callAI({
-          question: `Summarize: ${text.substring(0, 8000)}`
-        });
-        await db.query(
-          'UPDATE documents SET summary = $1 WHERE id = $2',
-          [summary, documentId]
-        );
+        const summary = await aiProvider.callAI({ question: `Summarize: ${text.substring(0, 5000)}` });
+        await db.query('UPDATE documents SET summary = $1 WHERE id = $2', [summary, documentId]);
       } catch (sumErr) {
-        console.warn('Summarization skipped:', sumErr.message);
+        console.warn('Summary generation failed');
       }
     }
 
-    res.json({
-      success: true,
-      message: 'Document processed successfully',
-      documentId,
-      url: publicUrl,
-      summary
-    });
+    res.json({ success: true, message: 'Processed', documentId, url: publicUrl });
 
   } catch (error) {
-    console.error(`[FAILED AT STEP ${progress}]:`, error.message, error.stack);
-    res.status(500).json({
-      error: `Upload failed at Step ${progress}`,
-      message: error.message
-    });
+    console.error(`Error at ${progress}:`, error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// ── GET /documents/:id/view ──────────────────────────────────────────────────
+// GET /documents/:id/view
 router.get('/:id/view', auth, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT file_path, file_type, filename FROM documents WHERE id = $1 AND user_id = $2',
+      'SELECT file_path FROM documents WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.id]
     );
-    if (result.rows.length === 0)
-      return res.status(404).json({ error: 'Document not found' });
-    const doc = result.rows[0];
-    if (doc.file_path && doc.file_path.startsWith('http'))
-      return res.redirect(doc.file_path);
-    return res.status(404).json({ error: 'File not found in cloud storage' });
+    if (result.rows.length === 0) return res.status(404).send('Not found');
+    res.redirect(result.rows[0].file_path);
   } catch (error) {
-    console.error('View document error:', error);
-    res.status(500).json({ error: 'Failed to serve document' });
+    res.status(500).send('Error');
   }
 });
 
-// ── DELETE /documents/:id ────────────────────────────────────────────────────
+// DELETE /documents/:id
 router.delete('/:id', auth, async (req, res) => {
   try {
     const result = await db.query(
       'SELECT file_path FROM documents WHERE id = $1 AND user_id = $2',
       [req.params.id, req.user.id]
     );
-    if (result.rows.length === 0)
-      return res.status(404).json({ error: 'Document not found' });
-    const filePath = result.rows[0].file_path;
-    if (
-      filePath &&
-      filePath.includes('storage/v1/object/public/documents/') &&
-      supabase
-    ) {
-      const storagePath = filePath.split('documents/')[1];
+    if (result.rows.length > 0 && result.rows[0].file_path.includes('documents/') && supabase) {
+      const storagePath = result.rows[0].file_path.split('documents/')[1];
       await supabase.storage.from('documents').remove([storagePath]);
     }
     await db.query('DELETE FROM documents WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Document deleted successfully' });
+    res.json({ message: 'Deleted' });
   } catch (error) {
-    console.error('Delete document error:', error);
-    res.status(500).json({ error: 'Failed to delete document' });
+    res.status(500).json({ error: 'Delete failed' });
   }
 });
 
