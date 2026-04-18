@@ -8,7 +8,14 @@ if (typeof global.DOMMatrix === 'undefined') {
   global.DOMMatrix = class DOMMatrix {};
 }
 const pdfRaw = require('pdf-parse');
-const pdf = typeof pdfRaw === 'function' ? pdfRaw : pdfRaw.default;
+// Robust function extraction: pdf-parse can be the module itself, .default, or a named property depending on bundling
+const pdf = (typeof pdfRaw === 'function') 
+  ? pdfRaw 
+  : (pdfRaw.default && typeof pdfRaw.default === 'function') 
+    ? pdfRaw.default 
+    : (pdfRaw.pdf && typeof pdfRaw.pdf === 'function')
+      ? pdfRaw.pdf
+      : pdfRaw; 
 const mammoth = require('mammoth');
 const db = require('../db');
 const auth = require('../middleware/auth');
