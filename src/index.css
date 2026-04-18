@@ -1,34 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* New Color Tokens */
-  --bg: #FAF7F2;
-  --sidebar: #F2EBE0;
-  --accent: #7C4A2D;
-  --accent-light: #C49A72;
-  --text: #2E1F0F;
-  --border: #E0D5C5;
+  /* Carbon & Amber Dark Theme Design Tokens */
+  --color-bg: #050505;
+  --color-surface-bg: #121212;
+  --color-sidebar: #0A0A0A;
+  --color-sidebar-hover: #1A1A1A;
+  --color-accent: #FF8C00;
+  --color-accent-hover: #FFA500;
+  --color-accent-glow: rgba(255, 140, 0, 0.15);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #888888;
+  --color-border: #222222;
+  --color-shadow: rgba(0, 0, 0, 0.5);
   
-  /* Mapping to existing app variables for compatibility */
-  --bg-color: var(--bg);
-  --sidebar-bg: var(--sidebar);
-  --card-bg: #FFFFFF;
-  --border-color: var(--border);
-  --text-primary: var(--text);
-  --text-secondary: rgba(46, 31, 15, 0.7);
-  --accent-color: var(--accent);
-  --accent-hover: #5E3821;
-  --user-bubble: var(--accent-light);
-  --error-color: #A52A2A;
-  --success-color: #4A6741;
+  /* Semantic Tokens mapping */
+  --bg-color: var(--color-bg);
+  --sidebar-bg: var(--color-sidebar);
+  --card-bg: var(--color-surface-bg);
+  --border-color: var(--color-border);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --accent-color: var(--color-accent);
+  --accent-hover: var(--color-accent-hover);
+  --user-bubble: #FF8C00;
+  --assistant-bubble: #1F1F1F;
+  --error-color: #FF4D4D;
+  --success-color: #00E676;
   
-  --font-heading: 'DM Serif Display', serif;
-  --font-body: 'Nunito', sans-serif;
+  /* Typography */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Outfit', sans-serif;
   
-  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-medium: 0 4px 12px rgba(46, 31, 15, 0.08);
-  
-  --transition-fast: all 0.15s ease;
+  /* Layout & Animation */
+  --border-radius-lg: 16px;
+  --border-radius-md: 12px;
+  --border-radius-sm: 8px;
+  --shadow-sm: 0 4px 12px var(--color-shadow);
+  --shadow-md: 0 8px 32px var(--color-shadow);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass-bg: rgba(18, 18, 18, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -38,8 +50,8 @@
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
@@ -47,60 +59,79 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 400; /* Serif Display looks best balanced */
-  color: var(--text);
-  margin-bottom: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
 }
 
 button {
   cursor: pointer;
   border: none;
   font-family: var(--font-body);
-  transition: var(--transition-fast);
+  transition: var(--transition-smooth);
+  outline: none;
+}
+
+button:active {
+  transform: scale(0.96);
 }
 
 input, textarea {
-  background-color: #FFFFFF;
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  color: var(--text);
+  background-color: #000000;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  color: #FFFFFF;
   padding: 12px 16px;
   font-family: var(--font-body);
-  transition: var(--transition-fast);
+  transition: var(--transition-smooth);
 }
 
 input:focus, textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(124, 74, 45, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-glow);
 }
 
 a {
-  color: var(--accent);
+  color: var(--color-accent);
   text-decoration: none;
-  transition: var(--transition-fast);
+  transition: var(--transition-smooth);
 }
 
 a:hover {
-  color: var(--accent-light);
+  color: var(--color-accent-hover);
 }
 
-/* Scrollbar */
+/* Scrollbar Style */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg);
+  background: var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: #333333;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-light);
+  background: var(--color-accent);
+}
+
+/* Utilities */
+.hover-lift {
+  transition: var(--transition-smooth);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px var(--color-shadow);
+}
+
+.glow-text {
+  text-shadow: 0 0 20px var(--color-accent-glow);
 }
 
 .animate-spin {

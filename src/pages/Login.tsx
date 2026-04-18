@@ -7,7 +7,7 @@ import { Bot, Shield, Zap, FileText, MessageSquare, BarChart3, ChevronDown, Chev
 import './Login.css';
 
 const LandingPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
@@ -125,7 +125,7 @@ const LandingPage: React.FC = () => {
                 <button onClick={() => navigate('/chat')} className="btn-primary">
                   Go to Chat <ChevronRight size={18} />
                 </button>
-                <button onClick={() => { supabase.auth.signOut(); }} className="btn-secondary">
+                <button onClick={async () => { await logout(); }} className="btn-secondary">
                   Sign Out
                 </button>
               </div>

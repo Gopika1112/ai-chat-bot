@@ -71,7 +71,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      // Explicitly clear state in case of network lag or listener delay
+      setUser(null);
+      setToken(null);
+      delete axios.defaults.headers.common['Authorization'];
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
