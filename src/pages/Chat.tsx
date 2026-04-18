@@ -307,13 +307,21 @@ const Chat: React.FC = () => {
         }),
       });
 
-      if (!response.ok) throw new Error('Chat failed');
+      if (!response.ok) {
+        let errorMsg = 'Chat failed';
+        try {
+          const errData = await response.json();
+          errorMsg = errData.error || errorMsg;
+        } catch (e) {
+          errorMsg = `Server error ${response.status}`;
+        }
+        throw new Error(errorMsg);
+      }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantContent = '';
       
-      // We clear summarizing state once the actual stream starts
       setIsSummarizing(false);
       setMessages(prev => [...prev, { role: 'assistant', content: '', timestamp: formatTime() }]);
 
@@ -327,8 +335,13 @@ const Chat: React.FC = () => {
           return [...prev.slice(0, -1), { ...last, content: assistantContent }];
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `🚨 **System Error:** ${err.message || 'Communication failed'}`, 
+        timestamp: formatTime() 
+      }]);
     } finally {
       setIsSendingMessage(false);
       setIsSummarizing(false);
