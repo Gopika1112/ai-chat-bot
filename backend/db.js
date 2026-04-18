@@ -1,15 +1,19 @@
 const { Pool } = require('pg');
 const config = require('./config');
 
-const pool = new Pool({
+const pool = config.DATABASE_URL ? new Pool({
   connectionString: config.DATABASE_URL,
-  ssl: config.DATABASE_URL?.includes('supabase.co') ? {
+  ssl: {
     rejectUnauthorized: false,
-  } : false,
+  },
   connectionTimeoutMillis: 30000, 
   idleTimeoutMillis: 30000,
   max: 20
-});
+}) : null;
+
+if (!pool) {
+  console.warn('⚠️ Database Pool could not be initialized: DATABASE_URL is missing.');
+}
 
 console.log(`📡 [DB] Connecting to: ${config.DATABASE_URL?.split('@')[1]?.split(':')[0]}`);
 
@@ -19,6 +23,10 @@ pool.on('error', (err) => {
 
 module.exports = {
   query: async (text, params) => {
+    if (!pool) {
+      console.error('❌ Database query attempted but pool is not initialized.');
+      throw new Error('Database connection not available. Check DATABASE_URL.');
+    }
     try {
       return await pool.query(text, params);
     } catch (error) {
