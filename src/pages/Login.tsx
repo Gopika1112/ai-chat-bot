@@ -9,6 +9,12 @@ import './Login.css';
 const LandingPage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [isSignUp, setIsSignUp] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const [authMessage, setAuthMessage] = React.useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = React.useState(false);
 
   const handleGoogleLogin = async () => {
     try {
@@ -21,6 +27,29 @@ const LandingPage: React.FC = () => {
       if (error) throw error;
     } catch (err) {
       console.error('Login failed', err);
+    }
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthMessage(null);
+    setIsAuthLoading(true);
+
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        setAuthMessage('Registration successful! Please check your email for confirmation.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate('/chat');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed');
+    } finally {
+      setIsAuthLoading(false);
     }
   };
 
@@ -105,21 +134,62 @@ const LandingPage: React.FC = () => {
         >
           <div className="login-header">
             <div className="logo-icon"><Bot size={40} /></div>
-            <h2>{user ? `Welcome back, ${user.name}!` : 'Ready to Begin?'}</h2>
-            <p>{user ? 'You are already signed in. Access your dashboard below.' : 'Sign in with your work account to access your dashboard'}</p>
+            <h2>{user ? `Welcome back, ${user.name || user.email.split('@')[0]}!` : (isSignUp ? 'Create Account' : 'Welcome Back')}</h2>
+            <p>{user ? 'You are already signed in. Access your dashboard below.' : (isSignUp ? 'Start your journey with a new account' : 'Sign in to access your intelligent documents')}</p>
           </div>
           
-          <div className="google-login-wrapper">
+          <div className="auth-container">
             {!user ? (
-              <button onClick={handleGoogleLogin} className="btn-google-login">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                Sign in with Google
-              </button>
+              <>
+                <form onSubmit={handleAuth} className="email-auth-form">
+                  <div className="input-group">
+                    <input 
+                      type="email" 
+                      placeholder="Email Address" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <input 
+                      type="password" 
+                      placeholder="Password" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  {authError && <div className="auth-error">{authError}</div>}
+                  {authMessage && <div className="auth-message">{authMessage}</div>}
+                  
+                  <button type="submit" className="btn-primary auth-submit" disabled={isAuthLoading}>
+                    {isAuthLoading ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                  </button>
+                </form>
+
+                <div className="auth-divider">
+                  <span>OR</span>
+                </div>
+
+                <button onClick={handleGoogleLogin} className="btn-google-login">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <p className="auth-toggle">
+                  {isSignUp ? 'Already have an account?' : 'New here?'} 
+                  <button onClick={() => setIsSignUp(!isSignUp)} className="toggle-link">
+                    {isSignUp ? 'Sign In' : 'Create Account'}
+                  </button>
+                </p>
+              </>
             ) : (
               <div className="logged-in-actions">
                 <button onClick={() => navigate('/chat')} className="btn-primary">
@@ -135,7 +205,7 @@ const LandingPage: React.FC = () => {
           {user && (
             <div className="auth-debug">
               <span className="p-badge">Status: Authenticated</span>
-              <code>User ID: {user.id.substring(0, 8)}...</code>
+              <code>User Email: {user.email}</code>
             </div>
           )}
         </motion.div>
