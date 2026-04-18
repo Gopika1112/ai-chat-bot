@@ -15,7 +15,8 @@ if (!pool) {
   console.warn('⚠️ Database Pool could not be initialized: DATABASE_URL is missing.');
 }
 
-console.log(`📡 [DB] Connecting to: ${config.DATABASE_URL?.split('@')[1]?.split(':')[0]}`);
+const dbHost = config.DATABASE_URL ? config.DATABASE_URL.split('@')[1]?.split(':')[0] : 'NOT_CONFIGURED';
+console.log(`📡 [DB] Connecting to host: ${dbHost}`);
 
 pool.on('error', (err) => {
   console.error('❌ Unexpected DB client error:', err.message);
