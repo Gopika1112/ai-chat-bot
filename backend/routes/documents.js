@@ -1,37 +1,23 @@
 const express = require('express');
 const multer = require('multer');
 
-// ── Vercel Serverless Polyfill ──────────────────────────────────────────────
-if (typeof global.DOMMatrix === 'undefined') {
-  global.DOMMatrix = class DOMMatrix {};
+// pdfjs-dist: pure JS, no native modules, works on Vercel serverless
+const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+
+async function extractPdfText(buffer) {
+  const uint8Array = new Uint8Array(buffer);
+  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+  const pdfDoc = await loadingTask.promise;
+  let fullText = '';
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    const page = await pdfDoc.getPage(i);
+    const content = await page.getTextContent();
+    fullText += content.items.map(item => item.str).join(' ') + '\n';
+  }
+  return fullText;
 }
 
-// ── FIX: Bulletproof pdf-parse loader for Vercel Node.js runtime ────────────
-// Vercel's bundler can expose pdf-parse as { default: fn }, { pdf: fn },
-// a plain function, or a nested object. We try every known shape.
-let pdf;
-try {
-  const pdfModule = require('pdf-parse');
-  if (typeof pdfModule === 'function') {
-    pdf = pdfModule;
-  } else if (pdfModule && typeof pdfModule.default === 'function') {
-    pdf = pdfModule.default;
-  } else if (pdfModule && typeof pdfModule.pdf === 'function') {
-    pdf = pdfModule.pdf;
-  } else {
-    // Last resort: find the first exported function
-    const fn = Object.values(pdfModule || {}).find(v => typeof v === 'function');
-    if (fn) {
-      pdf = fn;
-    } else {
-      throw new Error('pdf-parse: no callable export found');
-    }
-  }
-  console.log('pdf-parse loaded successfully, type:', typeof pdf);
-} catch (err) {
-  console.error('pdf-parse load failed:', err.message);
-  pdf = null;
-}
 
 const mammoth = require('mammoth');
 const db = require('../db');
@@ -93,15 +79,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     const isImage = file.mimetype.startsWith('image/');
 
     if (file.mimetype === 'application/pdf') {
-      // Guard: pdf-parse must have loaded correctly
-      if (typeof pdf !== 'function') {
-        throw new Error(
-          'pdf-parse did not load as a function on this server. ' +
-          'Try: npm remove pdf-parse && npm install pdf-parse@1.1.1 then redeploy.'
-        );
-      }
-      const result = await pdf(fileBuffer);
-      text = result.text;
+      text = await extractPdfText(fileBuffer);
 
     } else if (
       file.mimetype === 'text/plain' ||
