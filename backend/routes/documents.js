@@ -65,9 +65,18 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
     localPath = file.path;
 
+    // 0. SIZE CHECK (Vercel Limit is 4.5MB)
+    const MAX_SIZE = 4.5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+      return res.status(400).json({ error: 'File too large. Vercel limit is 4.5MB.' });
+    }
+
     // 1. DYNAMIC EXTRACTION
     progress = "1: Extraction";
     let text = '';
+    const isImage = file.mimetype.startsWith('image/');
+
     if (file.mimetype === 'application/pdf') {
       const fileBuffer = fs.readFileSync(localPath);
       const result = await pdf(fileBuffer);
@@ -77,12 +86,10 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       const docResult = await mammoth.extractRawText({ path: localPath });
       text = docResult.value;
+    } else if (isImage) {
+      text = `[Image Content: ${file.originalname}]`; // Basic metadata for images
     } else {
       return res.status(400).json({ error: 'Unsupported file type' });
-    }
-
-    if (!text || text.trim().length === 0) {
-      throw new Error('No readable text found in document.');
     }
 
     // 2. CLOUD STORAGE UPLOAD (Supabase)
@@ -108,35 +115,39 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     );
     const documentId = docResult.rows[0].id;
 
-    // 4. CHUNKING & EMBEDDINGS (RAG PREP)
-    progress = "4: Chunks & Embeddings";
-    const chunks = chunkText(text);
-    const BATCH_SIZE = 50; 
-    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
-      const batch = chunks.slice(i, i + BATCH_SIZE);
-      const embeddings = await batchEmbedChunks(batch);
-      await Promise.all(batch.map((chunk, index) => {
-        const embeddingArray = `[${embeddings[index].join(',')}]`;
-        return db.query(
-          'INSERT INTO document_chunks (document_id, content, embedding) VALUES ($1, $2, $3)',
-          [documentId, chunk, embeddingArray]
-        );
-      }));
+    // 4. CHUNKING & EMBEDDINGS (Skip for images)
+    if (!isImage && text.trim().length > 0) {
+        progress = "4: Chunks & Embeddings";
+        const chunks = chunkText(text);
+        const BATCH_SIZE = 50; 
+        for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+          const batch = chunks.slice(i, i + BATCH_SIZE);
+          const embeddings = await batchEmbedChunks(batch);
+          await Promise.all(batch.map((chunk, index) => {
+            const embeddingArray = `[${embeddings[index].join(',')}]`;
+            return db.query(
+              'INSERT INTO document_chunks (document_id, content, embedding) VALUES ($1, $2, $3)',
+              [documentId, chunk, embeddingArray]
+            );
+          }));
+        }
     }
 
     // 5. SUMMARIZATION
     progress = "5: Summarization";
-    let summary = 'Summary generation failed or timed out.';
-    try {
-      const prompt = `Summarize: ${text.substring(0, 8000)}`;
-      summary = await aiProvider.callAI({ question: prompt });
-      await db.query('UPDATE documents SET summary = $1 WHERE id = $2', [summary, documentId]);
-    } catch (sumErr) {
-      console.warn('⚠️ Summarization Skip:', sumErr.message);
+    let summary = isImage ? 'Image file uploaded successfully.' : 'Summary generation failed or timed out.';
+    if (!isImage && text.trim().length > 0) {
+        try {
+          const prompt = `Summarize: ${text.substring(0, 8000)}`;
+          summary = await aiProvider.callAI({ question: prompt });
+          await db.query('UPDATE documents SET summary = $1 WHERE id = $2', [summary, documentId]);
+        } catch (sumErr) {
+          console.warn('⚠️ Summarization Skip:', sumErr.message);
+        }
     }
 
     if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-    res.json({ message: 'Document processed successfully', documentId, summary });
+    res.json({ success: true, message: 'Document processed successfully', documentId, url: publicUrl, summary });
 
   } catch (error) {
     console.error(`❌ [FAILED AT STEP ${progress}]:`, error.message);
