@@ -1,9 +1,11 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
-// Load .env from the server directory explicitly
-const envPath = path.join(__dirname, '.env');
-dotenv.config({ path: envPath });
+// Load .env only in local development
+if (process.env.NODE_ENV !== 'production') {
+    const envPath = path.join(__dirname, '.env');
+    dotenv.config({ path: envPath });
+}
 
 // Server-side required environment variables validation
 const requiredEnvVars = [

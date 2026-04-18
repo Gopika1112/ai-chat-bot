@@ -20,6 +20,16 @@ app.use('/api/documents', docRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    database: !!process.env.DATABASE_URL,
+    ai: !!process.env.GEMINI_API_KEY,
+    supabase: !!process.env.SUPABASE_URL,
+    env: process.env.NODE_ENV || 'development'
+  });
+});
+
 const config = require('./config');
 
 if (config.MISSING_VARS && config.MISSING_VARS.length > 0) {
