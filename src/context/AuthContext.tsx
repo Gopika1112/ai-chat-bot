@@ -25,29 +25,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial session check
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const userData = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
-          picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
-          role: session.user.role
-        };
-        setUser(userData);
-        setToken(session.access_token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;
-      }
-      setLoading(false);
-    };
-
-    initAuth();
-
-    // Listen for auth changes
+    // Rely on onAuthStateChange for both initial session and updates
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('🔔 Auth Event:', _event);
       if (session) {
         const userData = {
           id: session.user.id,

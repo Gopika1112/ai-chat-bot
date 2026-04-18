@@ -47,9 +47,7 @@ const MainLayout = () => {
     <div className="main-layout">
       {!isChatPage && <Sidebar />}
       <main className={`main-content ${isChatPage ? 'full-width' : ''}`}>
-        <AnimatePresence mode="wait">
-          <Outlet />
-        </AnimatePresence>
+        <Outlet />
       </main>
     </div>
   );
@@ -79,7 +77,7 @@ function App() {
             <Route path="/landing" element={<PageWrapper><Login /></PageWrapper>} />
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
-              <Route path="/chat" element={<PageWrapper><Chat /></PageWrapper>} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="/upload" element={<PageWrapper><Upload /></PageWrapper>} />
               <Route path="/history" element={<PageWrapper><History /></PageWrapper>} />
               <Route path="/admin" element={<PageWrapper><Admin /></PageWrapper>} />
